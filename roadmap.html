@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>x86 Kernel Development Roadmap</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    /* Custom scrollbar and minimal transitions */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .badge { font-size: 11px; padding: 2px 8px; border-radius: 9999px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  </style>
+</head>
+<body class="bg-transparent text-[var(--foreground)] antialiased p-3 md:p-6 select-none">
+
+  <!-- Main Container -->
+  <div class="max-w-4xl mx-auto bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-2xl p-5 md:p-7 shadow-lg space-y-6">
+
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--border)] pb-5">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="inline-block w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="text-xs uppercase tracking-wider font-semibold text-[var(--muted-foreground)]">Interactive Roadmap</span>
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight text-[var(--foreground)] mt-1">32-Bit x86 Kernel Development Map</h1>
+        <p class="text-sm text-[var(--muted-foreground)] mt-0.5">From bare-metal boot sector to a preemptive multitasking kernel</p>
+      </div>
+
+      <!-- Overall Progress -->
+      <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3 min-w-[200px]">
+        <div class="flex justify-between items-center text-xs mb-1.5 font-medium">
+          <span class="text-[var(--muted-foreground)]">Phase Progress</span>
+          <span id="progressPercent" class="text-emerald-500 font-bold">0%</span>
+        </div>
+        <div class="w-full bg-[var(--border)] h-2 rounded-full overflow-hidden">
+          <div id="progressBar" class="bg-emerald-500 h-full w-0 transition-all duration-300"></div>
+        </div>
+        <div class="text-[11px] text-[var(--muted-foreground)] mt-1.5 text-right" id="progressCount">0 / 8 Phases Completed</div>
+      </div>
+    </div>
+
+    <!-- Filter / Quick Tabs -->
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="text-xs font-semibold text-[var(--muted-foreground)] mr-1">Filter:</span>
+      <button onclick="filterPhases('all')" class="tab-btn px-3 py-1 text-xs rounded-lg font-medium border border-[var(--border)] bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition">All Phases (8)</button>
+      <button onclick="filterPhases('boot')" class="tab-btn px-3 py-1 text-xs rounded-lg font-medium border border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition">Boot & Protected Mode</button>
+      <button onclick="filterPhases('kernel')" class="tab-btn px-3 py-1 text-xs rounded-lg font-medium border border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition">Memory & Scheduler</button>
+      <button onclick="filterPhases('user')" class="tab-btn px-3 py-1 text-xs rounded-lg font-medium border border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition">Filesystem & User Mode</button>
+    </div>
+
+    <!-- Timeline Cards Grid -->
+    <div id="phasesContainer" class="space-y-4">
+
+      <!-- Phase 1 -->
+      <div class="phase-card border border-[var(--border)] rounded-xl bg-[var(--background)] p-4 transition-all hover:border-[var(--muted-foreground)]" data-category="boot" data-index="1">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <input type="checkbox" onchange="togglePhase(1, this.checked)" class="phase-checkbox mt-1 w-4 h-4 rounded cursor-pointer accent-emerald-500">
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="badge bg-blue-500/10 text-blue-400 border border-blue-500/20">Phase 1</span>
+                <h3 class="font-semibold text-base text-[var(--foreground)]">Toolchain & Environment Setup</h3>
+              </div>
+              <p class="text-xs text-[var(--muted-foreground)] mt-1">Configure cross-compilation toolchain, binary utilities, emulator, and debugger.</p>
+            </div>
+          </div>
+          <button onclick="toggleDetails(1)" class="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] px-2 py-1 rounded border border-[var(--border)] shrink-0">Details</button>
+        </div>
+        <div id="details-1" class="hidden mt-4 pt-3 border-t border-[var(--border)] text-xs space-y-2 text-[var(--muted-foreground)]">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="bg-[var(--card)] p-2.5 rounded-lg border border-[var(--border)]">
+              <strong class="text-[var(--foreground)] block mb-1">Tools Required:</strong>
+              <ul class="list-disc list-inside space-y-0.5">
+                <li><code class="text-amber-400">nasm</code> (x86 assembler)</li>
+                <li><code class="text-amber-400">i686-elf-gcc</code> & <code class="text-amber-400">i686-elf-ld</code> (bare-metal cross compiler)</li>
+                <li><code class="text-amber-400">qemu-system-i386</code> (x86 emulator)</li>
+                <li><code class="text-amber-400">gdb</code> / <code class="text-amber-400">gdb-multiarch</code> (remote debugger)</li>
+              </ul>
+            </div>
+            <div class="bg-[var(--card)] p-2.5 rounded-lg border border-[var(--border)]">
+              <strong class="text-[var(--foreground)] block mb-1">Deliverables & Verifications:</strong>
+              <p>Write a master <code class="text-emerald-400">Makefile</code> to automate assembly, compilation, image generation, and launching QEMU with GDB stub enabled (<code class="text-sky-300">-s -S</code>).</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 2 -->
+      <div class="phase-card border border-[var(--border)] rounded-xl bg-[var(--background)] p-4 transition-all hover:border-[var(--muted-foreground)]" data-category="boot" data-index="2">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <input type="checkbox" onchange="togglePhase(2, this.checked)" class="phase-checkbox mt-1 w-4 h-4 rounded cursor-pointer accent-emerald-500">
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="badge bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">Phase 2</span>
+                <h3 class="font-semibold text-base text-[var(--foreground)]">Real-Mode Boot Sector (16-bit)</h3>
+              </div>
+              <p class="text-xs text-[var(--muted-foreground)] mt-1">First code executed by BIOS at 0x7C00. Display a greeting message using BIOS interrupts.</p>
+            </div>
+          </div>
+          <button onclick="toggleDetails(2)" class="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] px-2 py-1 rounded border border-[var(--border)] shrink-0">Details</button>
+        </div>
+        <div id="details-2" class="hidden mt-4 pt-3 border-t border-[var(--border)] text-xs space-y-2 text-[var(--muted-foreground)]">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="bg-[var(--card)] p-2.5 rounded-lg border border-[var(--border)]">
+              <strong class="text-[var(--foreground)] block mb-1">Key Concepts:</strong>
+              <ul class="list-disc list-inside space-y-0.5">
+                <li>Origin offset: <code class="text-amber-400">[org 0x7c00]</code>, 16-bit mode: <code class="text-amber-400">bits 16</code></li>
+                <li>BIOS Teletype output: <code class="text-amber-400">int 0x10</code> (AH=0x0E)</li>
+                <li>Boot signature: exactly 510 bytes code + <code class="text-amber-400">dw 0xAA55</code></li>
+                <li>Zeroing Segment registers (<code class="text-sky-300">DS, ES, SS</code>) & setting stack pointer</li>
+              </ul>
+            </div>
+            <div class="bg-[var(--card)] p-2.5 rounded-lg border border-[var(--border)]">
+              <strong class="text-[var(--foreground)] block mb-1">Deliverables & Verifications:</strong>
+              <p>QEMU boots directly from the 512-byte raw binary and displays a custom startup message on screen without crashing.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 3 -->
+      <div class="phase-card border border-[var(--border)] rounded-xl bg-[var(--background)] p-4 transition-all hover:border-[var(--muted-foreground)]" data-category="boot" data-index="3">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <input type="checkbox" onchange="togglePhase(3, this.checked)" class="phase-checkbox mt-1 w-4 h-4 rounded cursor-pointer accent-emerald-500">
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="badge bg-purple-500/10 text-purple-400 border border-purple-500/20">Phase 3</span>
+                <h3 class="font-semibold text-base text-[var(--foreground)]">Disk Loading & Real-Mode Interrupts</h3>
+              </div>
+              <p class="text-xs text-[var(--muted-foreground)] mt-1">Read subsequent sectors containing the kernel from disk into RAM using BIOS disk routines.</p>
+            </div>
+          </div>
+          <button onclick="toggleDetails(3)" class="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] px-2 py-1 rounded border border-[var(--border)] shrink-0">Details</button>
+        </div>
+        <div id="details-3" class="hidden mt-4 pt-3 border-t border-[var(--border)] text-xs space-y-2 text-[var(--muted-foreground)]">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="bg-[var(--card)] p-2.5 rounded-lg border border-[var(--border)]">
+              <strong class="text-[var(--foreground)] block mb-1">Key Concepts:</strong>
+              <ul class="list-disc list-inside space-y-0.5">
+                <li>BIOS disk service: <code class="text-amber-400">int 0x13</code> (AH=0x02, CHS addressing)</li>
+                <li>LBA to CHS conversion (Cylinder, Head, Sector)</li>
+                <li>Carry Flag (CF) check for read error handling & retry loop</li>
+                <li>Loading destination buffer into memory (e.g. at 0x100000 or 0x8000)</li>
+              </ul>
+            </div>
+            <div class="bg-[var(--card)] p-2.5 rounded-lg border border-[var(--border)]">
+              <strong class="text-[var(--foreground)] block mb-1">Deliverables & Verifications:</strong>
+              <p>Successfully load a secondary sector containing test data or kernel stub and verify contents in RAM via GDB inspect memory (<code class="text-sky-300">x/16x 0x...</code>).</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 4 -->
+      <div class="phase-card border border-[var(--border)] rounded-xl bg-[var(--background)] p-4 transition-all hover:border-[var(--muted-foreground)]" data-category="boot" data-index="4">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <input type="checkbox" onchange="togglePhase(4, this.checked)" class="phase-checkbox mt-1 w-4 h-4 rounded cursor-pointer accent-emerald-500">
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="badge bg-pink-500/10 text-pink-400 border border-pink-500/20">Phase 4</span>
+                <h3 class="font-semibold text-base text-[var(--foreground)]">32-Bit Protected Mode Switch</h3>
+              </div>
+              <p class="text-xs text-[var(--muted-foreground)] mt-1">Unlock 4GB address space: enable A20 gate, define GDT, set CR0, and jump to 32-bit C kernel.</p>
+            </div>
+          </div>
+          <button onclick="toggleDetails(4)" class="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] px-2 py-1 rounded border border-[var(--border)] shrink-0">Details</button>
+        </div>
+        <div id="details-4" class="hidden mt-4 pt-3 border-t border-[var(--border)] text-xs space-y-2 text-[var(--muted-foreground)]">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="bg-[var(--card)] p-2.5 rounded-lg border border-[var(--border)]">
+              <strong class="text-[var(--foreground)] block mb-1">Key Concepts:</strong>
+              <ul class="list-disc list-inside space-y-0.5">
+                <li>Enable <code class="text-amber-400">A20 line</code> (Fast A20 or keyboard controller)</li>
+                <li>Build GDT: Null, Kernel Code (0x08), Kernel Data (0x10)</li>
+                <li>Disable interrupts: <code class="text-amber-400">cli</code></li>
+                <li>Load descriptor: <code class="text-amber-400">lgdt [gdt_descriptor]</code></li>
+                <li>Set PE bit in <code class="text-amber-400">cr0</code> (Protection Enable)</li>
+                <li>Far jump <code class="text-amber-400">jmp 0x08:kernel_entry</code> to flush CPU pipeline</li>
+              </ul>
+            </div>
+            <div class="bg-[var(--card)] p-2.5 rounded-lg border border-[var(--border)]">
+              <strong class="text-[var(--foreground)] block mb-1">Deliverables & Verifications:</strong>
+              <p>Reach 32-bit entry point, reload data segments with 0x10, and write colored characters directly into VGA text buffer at <code class="text-emerald-400">0xB8000</code>.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 5 -->
+      <div class="phase-card border border-[var(--border)] rounded-xl bg-[var(--background)] p-4 transition-all hover:border-[var(--muted-foreground)]" data-category="kernel" data-index="5">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <input type="checkbox" onchange="togglePhase(5, this.checked)" class="phase-checkbox mt-1 w-4 h-4 rounded cursor-pointer accent-emerald-500">
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="badge bg-amber-500/10 text-amber-400 border border-amber-500/20">Phase 5</span>
+                <h3 class="font-semibold text-base text-[var(--foreground)]">Interrupts, Paging & Heap Memory</h3>
+              </div>
+              <p class="text-xs text-[var(--muted-foreground)] mt-1">Establish protected mode IDT, remap 8259 PIC, enable 4KB paging, and create kmalloc/kfree.</p>
+            </div>
+          </div>
+          <button onclick="toggleDetails(5)" class="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] px-2 py-1 rounded border border-[var(--border)] shrink-0">Details</button>
+        </div>
+        <div id="details-5" class="hidden mt-4 pt-3 border-t border-[var(--border)] text-xs space-y-2 text-[var(--muted-foreground)]">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="bg-[var(--card)] p-2.5 rounded-lg border border-[var(--border)]">
+              <strong class="text-[var(--foreground)] block mb-1">Key Concepts:</strong>
+              <ul class="list-disc list-inside space-y-0.5">
+                <li><code class="text-amber-400">IDT</code> (Interrupt Descriptor Table) with 256 gates</li>
+                <li>Remap PIC (Master: 0x20-0x27, Slave: 0x28-0x2F)</li>
+                <li>ISRs (Interrupt Service Routines) & IRQ dispatching</li>
+                <li>Two-level Paging: Page Directory (1024 entries) & Page Tables</li>
+                <li>Load <code class="text-sky-300">CR3</code> and flip paging bit in <code class="text-sky-300">CR0</code></li>
+                <li>Heap memory management (block header/footer, buddy/free-list)</li>
+              </ul>
+            </div>
+            <div class="bg-[var(--card)] p-2.5 rounded-lg border border-[var(--border)]">
+              <strong class="text-[var(--foreground)] block mb-1">Deliverables & Verifications:</strong>
+              <p>Catch division-by-zero or page faults cleanly without triple-faulting; dynamically allocate and free arbitrary memory structures via <code class="text-emerald-400">kmalloc()</code>.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 6 -->
+      <div class="phase-card border border-[var(--border)] rounded-xl bg-[var(--background)] p-4 transition-all hover:border-[var(--muted-foreground)]" data-category="kernel" data-index="6">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <input type="checkbox" onchange="togglePhase(6, this.checked)" class="phase-checkbox mt-1 w-4 h-4 rounded cursor-pointer accent-emerald-500">
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="badge bg-teal-500/10 text-teal-400 border border-teal-500/20">Phase 6</span>
+                <h3 class="font-semibold text-base text-[var(--foreground)]">Tasks, Processes & Multitasking</h3>
+              </div>
+              <p class="text-xs text-[var(--muted-foreground)] mt-1">Implement process control blocks, hardware TSS, context switching, and round-robin scheduler.</p>
+            </div>
+          </div>
+          <button onclick="toggleDetails(6)" class="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] px-2 py-1 rounded border border-[var(--border)] shrink-0">Details</button>
+        </div>
+        <div id="details-6" class="hidden mt-4 pt-3 border-t border-[var(--border)] text-xs space-y-2 text-[var(--muted-foreground)]">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="bg-[var(--card)] p-2.5 rounded-lg border border-[var(--border)]">
+              <strong class="text-[var(--foreground)] block mb-1">Key Concepts:</strong>
+              <ul class="list-disc list-inside space-y-0.5">
+                <li><code class="text-amber-400">TSS</code> (Task State Segment) for Ring 0 stack switching</li>
+                <li>Process Control Block (PCB): registers, page directory, state</li>
+                <li>PIT (Programmable Interval Timer) IRQ0 timer tick</li>
+                <li>Assembly context switch (<code class="text-sky-300">pushad / popad</code>, stack pointer swap)</li>
+                <li>Cooperative and preemptive task scheduling</li>
+              </ul>
+            </div>
+            <div class="bg-[var(--card)] p-2.5 rounded-lg border border-[var(--border)]">
+              <strong class="text-[var(--foreground)] block mb-1">Deliverables & Verifications:</strong>
+              <p>Run two concurrent tasks printing alternating characters or counters driven by the timer interrupt.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 7 -->
+      <div class="phase-card border border-[var(--border)] rounded-xl bg-[var(--background)] p-4 transition-all hover:border-[var(--muted-foreground)]" data-category="user" data-index="7">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <input type="checkbox" onchange="togglePhase(7, this.checked)" class="phase-checkbox mt-1 w-4 h-4 rounded cursor-pointer accent-emerald-500">
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="badge bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">Phase 7</span>
+                <h3 class="font-semibold text-base text-[var(--foreground)]">VFS, FAT16 & ELF Executable Loading</h3>
+              </div>
+              <p class="text-xs text-[var(--muted-foreground)] mt-1">Read files from disk, parse 32-bit ELF binaries, and execute user programs in Ring 3.</p>
+            </div>
+          </div>
+          <button onclick="toggleDetails(7)" class="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] px-2 py-1 rounded border border-[var(--border)] shrink-0">Details</button>
+        </div>
+        <div id="details-7" class="hidden mt-4 pt-3 border-t border-[var(--border)] text-xs space-y-2 text-[var(--muted-foreground)]">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="bg-[var(--card)] p-2.5 rounded-lg border border-[var(--border)]">
+              <strong class="text-[var(--foreground)] block mb-1">Key Concepts:</strong>
+              <ul class="list-disc list-inside space-y-0.5">
+                <li>VFS (Virtual File System) abstraction (open, read, write, close)</li>
+                <li>FAT16 file system parsing (Boot sector, FAT tables, Root dir, clusters)</li>
+                <li>ATA hard drive driver (PIO mode)</li>
+                <li>ELF32 file header & program header parsing</li>
+                <li>Ring 3 user mode transition via <code class="text-amber-400">iret</code> (CS=0x1B, DS=0x23)</li>
+                <li>System calls via software interrupt (e.g. <code class="text-sky-300">int 0x80</code>)</li>
+              </ul>
+            </div>
+            <div class="bg-[var(--card)] p-2.5 rounded-lg border border-[var(--border)]">
+              <strong class="text-[var(--foreground)] block mb-1">Deliverables & Verifications:</strong>
+              <p>Load an external compiled C program from disk into a separate user virtual memory space and execute it securely.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phase 8 -->
+      <div class="phase-card border border-[var(--border)] rounded-xl bg-[var(--background)] p-4 transition-all hover:border-[var(--muted-foreground)]" data-category="user" data-index="8">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex items-start gap-3">
+            <input type="checkbox" onchange="togglePhase(8, this.checked)" class="phase-checkbox mt-1 w-4 h-4 rounded cursor-pointer accent-emerald-500">
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="badge bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Phase 8</span>
+                <h3 class="font-semibold text-base text-[var(--foreground)]">Keyboard Driver & Interactive Shell</h3>
+              </div>
+              <p class="text-xs text-[var(--muted-foreground)] mt-1">Capture user input with a PS/2 keyboard driver and run an interactive command line interface.</p>
+            </div>
+          </div>
+          <button onclick="toggleDetails(8)" class="text-xs text-[var(--muted-foreground)] hover:text-[var(--foreground)] px-2 py-1 rounded border border-[var(--border)] shrink-0">Details</button>
+        </div>
+        <div id="details-8" class="hidden mt-4 pt-3 border-t border-[var(--border)] text-xs space-y-2 text-[var(--muted-foreground)]">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="bg-[var(--card)] p-2.5 rounded-lg border border-[var(--border)]">
+              <strong class="text-[var(--foreground)] block mb-1">Key Concepts:</strong>
+              <ul class="list-disc list-inside space-y-0.5">
+                <li>PS/2 Keyboard Controller: port <code class="text-amber-400">0x60</code> & IRQ1</li>
+                <li>Scancode set 1/2 translation to ASCII characters</li>
+                <li>Key buffer (ring / circular buffer)</li>
+                <li>VGA scrolling and cursor hardware movement (ports 0x3D4 / 0x3D5)</li>
+                <li>CLI parser (<code class="text-sky-300">help</code>, <code class="text-sky-300">ls</code>, <code class="text-sky-300">run</code>, <code class="text-sky-300">clear</code>)</li>
+              </ul>
+            </div>
+            <div class="bg-[var(--card)] p-2.5 rounded-lg border border-[var(--border)]">
+              <strong class="text-[var(--foreground)] block mb-1">Deliverables & Verifications:</strong>
+              <p>Type commands directly into the QEMU window, list files on disk, launch user programs, and view program output.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Quick Footer Tip -->
+    <div class="flex items-center justify-between text-xs text-[var(--muted-foreground)] pt-3 border-t border-[var(--border)]">
+      <span>Saved locally in workspace as: <code class="text-emerald-400 font-mono">roadmap.html</code></span>
+      <span class="text-right">Click checkboxes as you complete engineering milestones</span>
+    </div>
+
+  </div>
+
+  <script>
+    // State management
+    const totalPhases = 8;
+    let completed = {};
+
+    try {
+      const saved = localStorage.getItem('satnaos_phase_progress');
+      if (saved) {
+        completed = JSON.parse(saved);
+        Object.keys(completed).forEach(id => {
+          if (completed[id]) {
+            const cb = document.querySelector(`.phase-card[data-index="${id}"] .phase-checkbox`);
+            if (cb) cb.checked = true;
+          }
+        });
+      }
+    } catch (e) {}
+
+    function updateProgress() {
+      const count = Object.values(completed).filter(Boolean).length;
+      const pct = Math.round((count / totalPhases) * 100);
+      document.getElementById('progressPercent').innerText = pct + '%';
+      document.getElementById('progressBar').style.width = pct + '%';
+      document.getElementById('progressCount').innerText = `${count} / ${totalPhases} Phases Completed`;
+    }
+
+    function togglePhase(id, isDone) {
+      completed[id] = isDone;
+      try {
+        localStorage.setItem('satnaos_phase_progress', JSON.stringify(completed));
+      } catch (e) {}
+      updateProgress();
+    }
+
+    function toggleDetails(id) {
+      const el = document.getElementById('details-' + id);
+      if (el) {
+        el.classList.toggle('hidden');
+      }
+    }
+
+    function filterPhases(category) {
+      const cards = document.querySelectorAll('.phase-card');
+      const tabs = document.querySelectorAll('.tab-btn');
+      
+      tabs.forEach(t => {
+        t.classList.remove('bg-[var(--primary)]', 'text-[var(--primary-foreground)]');
+        t.classList.add('bg-[var(--background)]', 'text-[var(--muted-foreground)]');
+      });
+      event.target.classList.remove('bg-[var(--background)]', 'text-[var(--muted-foreground)]');
+      event.target.classList.add('bg-[var(--primary)]', 'text-[var(--primary-foreground)]');
+
+      cards.forEach(card => {
+        if (category === 'all' || card.getAttribute('data-category') === category) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+    }
+
+    updateProgress();
+  </script>
+</body>
+</html>
+

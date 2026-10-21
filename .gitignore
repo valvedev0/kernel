@@ -1,0 +1,13 @@
+# Build products
+build/
+dist/
+*.o
+*.elf
+*.bin
+*.img
+*.iso
+
+# Debugger and editor files
+.gdb_history
+.vscode/
+*.swp
