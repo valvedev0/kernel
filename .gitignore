@@ -11,3 +11,7 @@ dist/
 .gdb_history
 .vscode/
 *.swp
+
+# Internal Agent & Dashboard tooling
+AGENTS.md
+roadmap.html

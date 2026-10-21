@@ -56,7 +56,7 @@ graph TD
 
 ## Engineering Phases & Roadmap
 
-System development is structured into 8 sequential engineering phases. Real-time checklist and progress logs are tracked in [GOALS.md](GOALS.md), and in-depth architectural breakdowns are documented in [KERNEL_GUIDE.md](KERNEL_GUIDE.md).
+System development is structured into 8 sequential engineering phases. Real-time checklist and progress logs are tracked in [guides/GOALS.md](guides/GOALS.md), and in-depth architectural breakdowns are documented in [guides/KERNEL_GUIDE.md](guides/KERNEL_GUIDE.md).
 
 | Phase | Milestone | Description | Status |
 | :---: | :--- | :--- | :---: |
@@ -75,14 +75,16 @@ System development is structured into 8 sequential engineering phases. Real-time
 
 ```
 .
-├── AGENTS.md            # Universal developer and AI agent engineering guidelines
-├── GOALS.md             # Operational phase tracker, file inventory, and changelog
-├── KERNEL_GUIDE.md      # Deep technical knowledge base & architectural reference
-├── README.md            # Public repository overview and build documentation
-├── roadmap.html         # Interactive web-based roadmap GUI dashboard
+├── .gitignore               # Ignored build artifacts, local dashboard, and internal agent docs
+├── README.md                # Public repository showcase & quickstart documentation
+├── guides/
+│   ├── GOALS.md             # Operational phase tracker, file inventory, and changelog
+│   ├── KERNEL_GUIDE.md      # Deep technical knowledge base & architectural reference
+│   ├── ASSEMBLY_GUIDE.md    # Low-level x86 assembly primer for C++ engineers
+│   └── SETUP_GUIDE.md       # Toolchain, QEMU execution, and GDB debugging manual
 └── SatnaOS/
-    ├── boot.asm         # 16-bit real-mode MBR boot sector (origin 0x7c00)
-    └── boot.bin         # Assembled 512-byte raw bootable disk image
+    ├── boot.asm             # 16-bit real-mode MBR boot sector (origin 0x7c00)
+    └── boot.bin             # Assembled 512-byte raw bootable disk image (git-ignored)
 ```
 
 ---
@@ -120,11 +122,12 @@ sudo apt install -y nasm qemu-system-x86
 
 ---
 
-## Deep Documentation
+## Dedicated Guides & Knowledge Base
 
-- **Knowledge Base:** For detailed instruction encodings, hardware register mechanics, memory maps, and technical walkthroughs, see [KERNEL_GUIDE.md](KERNEL_GUIDE.md).
-- **Milestone Tracker:** For real-time task statuses and hardware inventory, see [GOALS.md](GOALS.md).
-- **Interactive Roadmap:** Open [roadmap.html](roadmap.html) in any modern browser for an interactive milestone dashboard.
+- **[guides/KERNEL_GUIDE.md](guides/KERNEL_GUIDE.md):** Textbook-grade systems reference covering the x86 real-mode execution model, memory topology, opcode decodings, and future subsystem blueprints.
+- **[guides/ASSEMBLY_GUIDE.md](guides/ASSEMBLY_GUIDE.md):** x86 assembly manual translating CPU registers, memory segments, calling conventions, and string instructions into intuitive C++ mental models.
+- **[guides/SETUP_GUIDE.md](guides/SETUP_GUIDE.md):** Operational manual for NASM commands, QEMU monitor inspection, GDB remote debugging, and triple-fault triage.
+- **[guides/GOALS.md](guides/GOALS.md):** Operational milestone checklist, toolchain inventory, and phase completion logs.
 
 ---
 
