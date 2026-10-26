@@ -6,10 +6,10 @@ Build a robust 32-bit, multitasking x86 operating system and kernel from first p
 ---
 
 ## Current Status
-- **Current Phase:** Phase 2 Complete (Real-Mode Bootloader) / Advancing to Phase 3 (Disk I/O)
-- **Last Updated:** 2026-10-21
+- **Current Phase:** Phase 3 Complete (Real-Mode Disk I/O & Secondary Sector Loading) / Advancing to Phase 4 (Protected Mode Switch)
+- **Last Updated:** 2026-10-26
 - **Current Working Directory:** `SatnaOS/`
-- **Next Milestone:** Implement multi-sector disk reading via BIOS `INT 0x13` and verify disk buffers in RAM.
+- **Next Milestone:** Enter 32-bit Protected Mode: enable A20 gate, define GDT, set CR0 PE bit, and jump to 32-bit kernel code.
 
 ---
 
@@ -20,15 +20,19 @@ Build a robust 32-bit, multitasking x86 operating system and kernel from first p
   - [x] Emulator: QEMU 8.2.2 (`qemu-system-i386`, `qemu-system-x86_64`) installed and verified.
   - [ ] Cross-compiler: `i686-elf-gcc` and `i686-elf-ld` (required for C kernel compilation).
   - [ ] Debugger: GDB configured for remote QEMU stub debugging (`-s -S`).
-- [x] **Phase 2: Real-Mode Boot Sector**
-  - [x] 16-bit real-mode entry point at origin `0x7C00`.
+- [x] **Phase 2: Real-Mode Boot Sector & Architecture Normalization**
+  - [x] 16-bit real-mode entry point and far jump (`jmp 0x7c0:start`) for `CS` segment normalization.
+  - [x] Origin set to `0` with segment alignment (`DS = 0x07C0`, `ES = 0x07C0`).
+  - [x] Safe downward hardware stack setup (`SS = 0x0000`, `SP = 0x7C00`) with atomic `cli`/`sti` protection.
   - [x] BIOS teletype video output via `INT 0x10` (`AH = 0x0E`).
   - [x] String traversal with `lodsb`, null-byte termination, and loop branch.
   - [x] Sector padding (`times 510 - ($ - $$) db 0`) and MBR magic signature `0xAA55`.
   - [x] Boot verification in QEMU with "Hello, World!" output.
-- [ ] **Phase 3: Disk Loading & Real-Mode Interrupts**
-  - [ ] Load consecutive sectors from disk to RAM using BIOS `INT 0x13`.
-  - [ ] LBA-to-CHS addressing calculation and error handling (Carry Flag inspection).
+- [x] **Phase 3: Multi-Sector Disk Loading & Early Filesystem Architecture**
+  - [x] Filesystem BIOS Parameter Block (BPB) space reservation (`times 33 db 0`).
+  - [x] Load Sector 2 from disk to RAM at `0x7E00` via BIOS `INT 0x13` (`AH = 0x02`, CHS mode).
+  - [x] Hardware error handling via Carry Flag check (`jc error`).
+  - [x] Build automation with `Makefile` and `dd` generating multi-sector disk images.
 - [ ] **Phase 4: 32-Bit Protected Mode Switch**
   - [ ] Enable A20 line.
   - [ ] Define and load Global Descriptor Table (GDT).
@@ -75,14 +79,45 @@ Build a robust 32-bit, multitasking x86 operating system and kernel from first p
 │   ├── KERNEL_GUIDE.md      # Deep technical architecture reference & knowledge base
 │   ├── ASSEMBLY_GUIDE.md    # x86 assembly for C++ engineers
 │   └── SETUP_GUIDE.md       # Toolchain, build, and debugging documentation
+├── portfolio_export/        # Git-ignored local staging area for portfolio website
+│   └── index.html           # Full-featured research page ready to paste into portfolio
 └── SatnaOS/
-    ├── boot.asm             # 16-bit real-mode boot sector source code (origin 0x7c00)
-    └── boot.bin             # Assembled 512-byte raw MBR binary (ignored by git)
+    ├── Makefile             # Build automation assembling boot sector & stitching multi-sector disk
+    ├── boot.asm             # 16-bit real-mode MBR with BPB padding, segment setup & INT 0x13
+    ├── boot.bin             # Generated multi-sector raw disk image (ignored by git)
+    └── message.txt          # Secondary sector payload loaded by BIOS from disk
 ```
 
 ---
 
 ## Detailed Milestone Log
+
+### Milestone: Phase 3 Completed — Multi-Sector Disk Loading & BPB Architecture
+- **Date Completed:** 2026-10-26
+- **Files Involved:** `SatnaOS/boot.asm`, `SatnaOS/Makefile`, `SatnaOS/message.txt`
+- **Technical Validation:**
+  - Implemented BPB filesystem reservation (`_start: jmp short start; nop; times 33 db 0`).
+  - Utilized BIOS `INT 0x13` (`AH=0x02`, `AL=1`, `CH=0`, `CL=2`, `DH=0`) to load Sector 2 from disk to memory buffer `0x7E00`.
+  - Added hardware error status detection via the Carry Flag (`jc error`).
+  - Created automated build pipeline with `Makefile` using GNU `dd` to stitch Sector 1 (MBR) and Sector 2 (`message.txt`).
+  - Validated in QEMU: Sector 2 text read into RAM buffer and printed via BIOS `INT 0x10`.
+
+### Milestone: Phase 2 Architecture Refinement — Segment Normalization & Stack Setup
+- **Date Completed:** 2026-10-26
+- **Files Involved:** `SatnaOS/boot.asm`, `SatnaOS/boot.bin`
+- **Technical Validation:**
+  - Implemented inter-segment far jump `jmp 0x7c0:start` (Opcode `EA 05 00 C0 07`) to eliminate BIOS `CS` ambiguity.
+  - Aligned data access with `ORG 0` and `DS = ES = 0x07C0`.
+  - Initialized isolated downward stack at `SS = 0x0000`, `SP = 0x7C00` wrapped in `cli` and `sti` to avert dual-instruction interrupt hazards.
+  - Assembled to 512 bytes with opcode verification (`EA`, `FA`, `B8 C0 07`, `8E D8`, `8E D0`, `BC 00 7C`, `FB`).
+
+### Milestone: Portfolio Showcase Integration Created
+- **Date Completed:** 2026-10-21
+- **Files Involved:** `portfolio_export/research/satnaos-kernel/index.html`, `portfolio_export/project-card-snippet.html`
+- **Technical Validation:**
+  - Matched portfolio design tokens (`--paper: #fdfbe5`, `--ink: #121212`, `--serif`, `--mono`).
+  - Integrated 3-column layout, Chart.js memory visualization, tabbed code walkthrough, and C++ mental models.
+  - Linked interactive AI system explainer to existing `/api/gemini` Vercel endpoint.
 
 ### Milestone: Phase 2 Real-Mode Bootloader Verified
 - **Date Completed:** 2026-10-20
